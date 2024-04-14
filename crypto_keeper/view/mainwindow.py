@@ -1,19 +1,23 @@
 # crypto_keeper/view/mainwindow.py
 
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QComboBox, QLineEdit, QPushButton, QListWidget, QLabel, QApplication, QListWidget, QToolTip
+    QWidget, QVBoxLayout, QHBoxLayout, QComboBox, QLineEdit, QPushButton, QListWidget, QLabel, QApplication, QListWidget
 )
 from PySide6.QtCore import QThread, Signal
-
+from PySide6.QtGui import QIcon
 class Mainwindow(QWidget):
     def __init__(self, model):
         super().__init__()
         self.model = model
         self.init_ui()
+        self.custom_fields = []
 
     def init_ui(self):
         self.setWindowTitle('Digital Legacy Safe')
         layout = QVBoxLayout(self)
+
+        # Add icon
+        #self.setWindowIcon(QIcon('icon.png'))
 
         # Category combo box
         category_layout = QHBoxLayout()
@@ -38,12 +42,18 @@ class Mainwindow(QWidget):
 
         # Buttons
         button_layout = QHBoxLayout()
+        self.add_field_button = QPushButton('Add Custom Field')
+        self.add_field_button.clicked.connect(self.add_custom_field)
+        layout.addWidget(self.add_field_button)
         self.save_button = QPushButton('Save')
         self.save_button.setEnabled(False)
         self.retrieve_button = QPushButton('Retrieve')
         button_layout.addWidget(self.save_button)
         button_layout.addWidget(self.retrieve_button)
         layout.addLayout(button_layout)
+        self.delete_button = QPushButton('Delete')
+        self.delete_button.setEnabled(False)  # 初始時禁用刪除按鈕
+        button_layout.addWidget(self.delete_button)
 
         # Data list
         self.data_list = QListWidget()
@@ -125,6 +135,7 @@ class Mainwindow(QWidget):
         if self.category_combo.currentIndex() == 0:  # Wallet
             self.wallet_seed_input.mouseDoubleClickEvent = lambda event: self.copy_to_clipboard(self.wallet_seed_input)
             self.private_key_input.mouseDoubleClickEvent = lambda event: self.copy_to_clipboard(self.private_key_input)
+            self.data_list.itemSelectionChanged.connect(self.enable_delete_button)
         else:  # Exchange
             self.exchange_account_input.mouseDoubleClickEvent = lambda event: self.copy_to_clipboard(self.exchange_account_input)
             self.exchange_password_input.mouseDoubleClickEvent = lambda event: self.copy_to_clipboard(self.exchange_password_input)
@@ -134,6 +145,7 @@ class Mainwindow(QWidget):
             self.auth_phone_input.mouseDoubleClickEvent = lambda event: self.copy_to_clipboard(self.auth_phone_input)
             self.fund_password_input.mouseDoubleClickEvent = lambda event: self.copy_to_clipboard(self.fund_password_input)
             self.identity_data_input.mouseDoubleClickEvent = lambda event: self.copy_to_clipboard(self.identity_data_input)
+            self.data_list.itemSelectionChanged.connect(self.enable_delete_button)
 
     def copy_to_clipboard(self, input_field):
         input_field.selectAll()
@@ -154,3 +166,30 @@ class Mainwindow(QWidget):
             self.auth_phone_input.clear()
             self.fund_password_input.clear()
             self.identity_data_input.clear()
+
+    def add_custom_field(self):
+        # Create the custom field container widget
+        custom_field_widget = QWidget()
+        custom_field_layout = QHBoxLayout(custom_field_widget)
+        name_input = QLineEdit()
+        name_input.setPlaceholderText('Field Name')
+        value_input = QLineEdit()
+        value_input.setPlaceholderText('Field Value')
+        custom_field_layout.addWidget(name_input)
+        custom_field_layout.addWidget(value_input)
+        
+        # Add the entire widget to the layout, not just the QLineEdit components
+        self.data_input_layout.addWidget(custom_field_widget)
+        self.custom_fields.append((custom_field_widget, name_input, value_input))  # Include the widget itself
+
+    def remove_custom_fields(self):
+        # Remove all custom field widgets from the layout
+        for custom_field_widget, name_input, value_input in self.custom_fields:
+            # Remove and delete the whole container widget
+            self.data_input_layout.removeWidget(custom_field_widget)
+            custom_field_widget.deleteLater()
+        self.custom_fields.clear()  # Clear the list after removing all custom fields
+
+    def enable_delete_button(self):
+        has_selection = self.data_list.currentRow() >= 0
+        self.delete_button.setEnabled(has_selection)

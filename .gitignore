@@ -1,1 +1,3 @@
 *.pyc
+crypto_keeper/key.txt
+crypto_keeper/legacy_data.json
