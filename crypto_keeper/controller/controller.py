@@ -97,6 +97,16 @@ class Controller:
         category = self.view.category_combo.currentText()
         identifier = self.view.identifier_input.text()
 
+        # 檢查是否存在同名條目，並要求確認覆蓋
+        if identifier in self.model.data.get(category, {}):
+            reply = QMessageBox.question(
+                self.view, 'Confirm Save',
+                f"'{identifier}' already exists for '{category}'. Do you want to overwrite it?",
+                QMessageBox.Yes | QMessageBox.No, QMessageBox.No
+            )
+            if reply != QMessageBox.Yes:
+                return  # 如果用戶選擇不覆蓋，則直接返回，不進行下面的保存操作
+            
         # 預設資料欄位，根據類別來決定是否包含
         data_fields = []
         if category == 'Wallet':
