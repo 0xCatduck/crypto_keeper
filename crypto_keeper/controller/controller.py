@@ -140,7 +140,7 @@ class Controller:
         identifier = self.view.data_list.currentItem().text()
         decrypted_data = self.model.decrypt_and_retrieve(category, identifier)
         if decrypted_data is None:
-            QMessageBox.warning(self.view, "Error", "Unable to read key.txt file. Please ensure it is in the same directory as legacy_data.json.")
+            QMessageBox.warning(self.view, "Error", "Failed to retrieve data, please check the key.txt file.")
             return
 
         self.view.identifier_input.setText(identifier)

@@ -11,7 +11,7 @@ class Mainwindow(QWidget):
         self.model = model
         self.init_ui()
         self.custom_fields = []
-        self.resize(400, 800)
+        self.resize(600, 800)
 
     def init_ui(self):
         self.setWindowTitle('Crypto Keeper')
