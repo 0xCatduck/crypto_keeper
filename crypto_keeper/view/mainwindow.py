@@ -36,6 +36,7 @@ class Mainwindow(QWidget):
         identifier_layout = QHBoxLayout()
         identifier_label = QLabel('Name:')
         self.identifier_input = QLineEdit()
+        self.identifier_input.textChanged.connect(self.update_save_button_state)
         identifier_layout.addWidget(identifier_label)
         identifier_layout.addWidget(self.identifier_input)
         layout.addLayout(identifier_layout)
@@ -88,9 +89,6 @@ class Mainwindow(QWidget):
         self.update_data_inputs(0) 
         self.update_data_list(0)
 
-        self.category_combo.currentIndexChanged.connect(self.update_data_inputs)
-        self.update_data_inputs(0)
-
         # double click to copy data
         self.connect_data_input_events()
 
@@ -101,57 +99,68 @@ class Mainwindow(QWidget):
             self.data_list.addItems(self.model.data[category].keys())
 
     def update_data_inputs(self, index):
+        
         for i in reversed(range(self.data_input_layout.count())):
             self.data_input_layout.itemAt(i).widget().setParent(None)
 
         if index == 0:  # Wallet
             wallet_seed_label = QLabel('Wallet Seed:')
             self.wallet_seed_input = QLineEdit()
+            self.wallet_seed_input.textChanged.connect(self.update_save_button_state)
             self.data_input_layout.addWidget(wallet_seed_label)
             self.data_input_layout.addWidget(self.wallet_seed_input)
 
             private_key_label = QLabel('Private Key:')
             self.private_key_input = QLineEdit()
+            self.private_key_input.textChanged.connect(self.update_save_button_state)
             self.data_input_layout.addWidget(private_key_label)
             self.data_input_layout.addWidget(self.private_key_input)
         elif index == 1:  # Exchange
             exchange_account_label = QLabel('Exchange Account:')
             self.exchange_account_input = QLineEdit()
+            self.exchange_account_input.textChanged.connect(self.update_save_button_state)
             self.data_input_layout.addWidget(exchange_account_label)
             self.data_input_layout.addWidget(self.exchange_account_input)
 
             exchange_password_label = QLabel('Exchange Password:')
             self.exchange_password_input = QLineEdit()
+            self.exchange_password_input.textChanged.connect(self.update_save_button_state)
             self.data_input_layout.addWidget(exchange_password_label)
             self.data_input_layout.addWidget(self.exchange_password_input)
 
             google_2fa_label = QLabel('Google 2FA:')
             self.google_2fa_input = QLineEdit()
+            self.google_2fa_input.textChanged.connect(self.update_save_button_state)
             self.data_input_layout.addWidget(google_2fa_label)
             self.data_input_layout.addWidget(self.google_2fa_input)
 
             phone_number_label = QLabel('Phone Number:')
             self.phone_number_input = QLineEdit()
+            self.phone_number_input.textChanged.connect(self.update_save_button_state)
             self.data_input_layout.addWidget(phone_number_label)
             self.data_input_layout.addWidget(self.phone_number_input)
 
             auth_email_label = QLabel('Auth Email:')
             self.auth_email_input = QLineEdit()
+            self.auth_email_input.textChanged.connect(self.update_save_button_state)
             self.data_input_layout.addWidget(auth_email_label)
             self.data_input_layout.addWidget(self.auth_email_input)
 
             auth_phone_label = QLabel('Auth Phone:')
             self.auth_phone_input = QLineEdit()
+            self.auth_phone_input.textChanged.connect(self.update_save_button_state)
             self.data_input_layout.addWidget(auth_phone_label)
             self.data_input_layout.addWidget(self.auth_phone_input)
 
             fund_password_label = QLabel('Fund Password:')
             self.fund_password_input = QLineEdit()
+            self.fund_password_input.textChanged.connect(self.update_save_button_state)
             self.data_input_layout.addWidget(fund_password_label)
             self.data_input_layout.addWidget(self.fund_password_input)
 
             identity_data_label = QLabel('Identity Data:')
             self.identity_data_input = QLineEdit()
+            self.identity_data_input.textChanged.connect(self.update_save_button_state)
             self.data_input_layout.addWidget(identity_data_label)
             self.data_input_layout.addWidget(self.identity_data_input)
         else:  # Others
@@ -163,7 +172,7 @@ class Mainwindow(QWidget):
             self.wallet_seed_input.mouseDoubleClickEvent = lambda event: self.copy_to_clipboard(self.wallet_seed_input)
             self.private_key_input.mouseDoubleClickEvent = lambda event: self.copy_to_clipboard(self.private_key_input)
             self.data_list.itemSelectionChanged.connect(self.enable_delete_button)
-        else:  # Exchange
+        elif self.category_combo.currentIndex() ==1:  # Exchange
             self.exchange_account_input.mouseDoubleClickEvent = lambda event: self.copy_to_clipboard(self.exchange_account_input)
             self.exchange_password_input.mouseDoubleClickEvent = lambda event: self.copy_to_clipboard(self.exchange_password_input)
             self.google_2fa_input.mouseDoubleClickEvent = lambda event: self.copy_to_clipboard(self.google_2fa_input)
@@ -173,6 +182,8 @@ class Mainwindow(QWidget):
             self.fund_password_input.mouseDoubleClickEvent = lambda event: self.copy_to_clipboard(self.fund_password_input)
             self.identity_data_input.mouseDoubleClickEvent = lambda event: self.copy_to_clipboard(self.identity_data_input)
             self.data_list.itemSelectionChanged.connect(self.enable_delete_button)
+        else:  # Others
+            pass
 
     def copy_to_clipboard(self, input_field):
         input_field.selectAll()
@@ -206,12 +217,15 @@ class Mainwindow(QWidget):
         else:
             name_widget = QLineEdit()
             name_widget.setPlaceholderText('Field Name')
+            self.setup_double_click_to_copy(name_widget)  # Setup double-click to copy for the name field if it's an input
         
         value_input = QLineEdit()
         if value:
             value_input.setText(value)
         else:
             value_input.setPlaceholderText('Field Value')
+        value_input.textChanged.connect(self.update_save_button_state)
+        self.setup_double_click_to_copy(value_input)  # Setup double-click to copy for the value field
         
         custom_field_layout.addWidget(name_widget)
         custom_field_layout.addWidget(value_input)
@@ -219,6 +233,16 @@ class Mainwindow(QWidget):
         # Add the entire widget to the layout, not just the QLineEdit components
         self.data_input_layout.addWidget(custom_field_widget)
         self.custom_fields.append((custom_field_widget, name_widget, value_input))  # Include the widget itself
+        self.update_save_button_state()
+
+    def setup_double_click_to_copy(self, input_field):
+        def on_double_click(event):
+            input_field.selectAll()  # 全選文本
+            QApplication.clipboard().setText(input_field.text())  # 複製文本到剪貼板
+            QLineEdit.mouseDoubleClickEvent(input_field, event)  # 呼叫原本的雙擊事件以保持行為一致
+
+        input_field.mouseDoubleClickEvent = on_double_click
+
 
     def remove_custom_fields(self):
         # Remove all custom field widgets from the layout
@@ -227,6 +251,52 @@ class Mainwindow(QWidget):
             self.data_input_layout.removeWidget(custom_field_widget)
             custom_field_widget.deleteLater()
         self.custom_fields.clear()  # Clear the list after removing all custom fields
+        self.update_save_button_state()
+
+
+
+    def update_save_button_state(self):
+        category = self.category_combo.currentText()
+        identifier = self.identifier_input.text().strip()
+
+        if not identifier:
+            self.save_button.setEnabled(False)
+            return
+
+        if category == 'Others':
+            has_custom_field = any(
+                name_widget.text().strip() and value_input.text().strip()
+                for _, name_widget, value_input in self.custom_fields
+            )
+            self.save_button.setEnabled(has_custom_field)
+        else:
+            default_fields = []
+            if category == 'Wallet':
+                default_fields = [
+                    self.wallet_seed_input.text().strip(),
+                    self.private_key_input.text().strip()
+                ]
+            elif category == 'Exchange':
+                default_fields = [
+                    self.exchange_account_input.text().strip(),
+                    self.exchange_password_input.text().strip(),
+                    self.google_2fa_input.text().strip(),
+                    self.phone_number_input.text().strip(),
+                    self.auth_email_input.text().strip(),
+                    self.auth_phone_input.text().strip(),
+                    self.fund_password_input.text().strip(),
+                    self.identity_data_input.text().strip()
+                ]
+
+            has_default_field = any(default_fields)
+            has_custom_field = any(
+                name_widget.text().strip() and value_input.text().strip()
+                for _, name_widget, value_input in self.custom_fields
+            )
+            self.save_button.setEnabled(has_default_field or has_custom_field)
+
+
+
 
     def enable_delete_button(self):
         has_selection = self.data_list.currentRow() >= 0
