@@ -4,6 +4,7 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QComboBox, QLineEdit, QPushButton, QListWidget, QLabel, QApplication, QListWidget, QSizePolicy
 )
 from PySide6.QtGui import QFont
+from PySide6.QtGui import QIcon
 
 class Mainwindow(QWidget):
     def __init__(self, model):
@@ -22,7 +23,7 @@ class Mainwindow(QWidget):
         self.setSizePolicy(size_policy)
 
         # Add icon
-        #self.setWindowIcon(QIcon('icon.png'))
+        self.setWindowIcon(QIcon('view/icon.png'))
 
         # Category combo box
         category_layout = QHBoxLayout()
