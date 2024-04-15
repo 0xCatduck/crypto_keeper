@@ -11,6 +11,7 @@ class Mainwindow(QWidget):
         self.model = model
         self.init_ui()
         self.custom_fields = []
+        self.resize(400, 800)
 
     def init_ui(self):
         self.setWindowTitle('Crypto Keeper')
@@ -43,6 +44,9 @@ class Mainwindow(QWidget):
         self.data_input_widget = QWidget()
         self.data_input_layout = QVBoxLayout(self.data_input_widget)
         layout.addWidget(self.data_input_widget)
+
+        # Add stretch before data inputs to push them to the top
+        layout.addStretch(1)
 
         # Buttons
         button_layout = QHBoxLayout()
