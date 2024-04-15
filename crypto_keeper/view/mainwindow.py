@@ -135,12 +135,6 @@ class Mainwindow(QWidget):
             self.data_input_layout.addWidget(google_2fa_label)
             self.data_input_layout.addWidget(self.google_2fa_input)
 
-            phone_number_label = QLabel('Phone Number:')
-            self.phone_number_input = QLineEdit()
-            self.phone_number_input.textChanged.connect(self.update_save_button_state)
-            self.data_input_layout.addWidget(phone_number_label)
-            self.data_input_layout.addWidget(self.phone_number_input)
-
             auth_email_label = QLabel('Auth Email:')
             self.auth_email_input = QLineEdit()
             self.auth_email_input.textChanged.connect(self.update_save_button_state)
@@ -177,7 +171,6 @@ class Mainwindow(QWidget):
             self.exchange_account_input.mouseDoubleClickEvent = lambda event: self.copy_to_clipboard(self.exchange_account_input)
             self.exchange_password_input.mouseDoubleClickEvent = lambda event: self.copy_to_clipboard(self.exchange_password_input)
             self.google_2fa_input.mouseDoubleClickEvent = lambda event: self.copy_to_clipboard(self.google_2fa_input)
-            self.phone_number_input.mouseDoubleClickEvent = lambda event: self.copy_to_clipboard(self.phone_number_input)
             self.auth_email_input.mouseDoubleClickEvent = lambda event: self.copy_to_clipboard(self.auth_email_input)
             self.auth_phone_input.mouseDoubleClickEvent = lambda event: self.copy_to_clipboard(self.auth_phone_input)
             self.fund_password_input.mouseDoubleClickEvent = lambda event: self.copy_to_clipboard(self.fund_password_input)
@@ -200,7 +193,6 @@ class Mainwindow(QWidget):
             self.exchange_account_input.clear()
             self.exchange_password_input.clear()
             self.google_2fa_input.clear()
-            self.phone_number_input.clear()
             self.auth_email_input.clear()
             self.auth_phone_input.clear()
             self.fund_password_input.clear()
@@ -282,7 +274,6 @@ class Mainwindow(QWidget):
                     self.exchange_account_input.text().strip(),
                     self.exchange_password_input.text().strip(),
                     self.google_2fa_input.text().strip(),
-                    self.phone_number_input.text().strip(),
                     self.auth_email_input.text().strip(),
                     self.auth_phone_input.text().strip(),
                     self.fund_password_input.text().strip(),
@@ -312,7 +303,6 @@ class Mainwindow(QWidget):
             self.exchange_account_input.clear()
             self.exchange_password_input.clear()
             self.google_2fa_input.clear()
-            self.phone_number_input.clear()
             self.auth_email_input.clear()
             self.auth_phone_input.clear()
             self.fund_password_input.clear()

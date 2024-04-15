@@ -51,9 +51,9 @@ class Controller:
             elif category == 'Exchange':
                 data_fields = [
                     self.view.exchange_account_input, self.view.exchange_password_input,
-                    self.view.google_2fa_input, self.view.phone_number_input,
-                    self.view.auth_email_input, self.view.auth_phone_input,
-                    self.view.fund_password_input, self.view.identity_data_input
+                    self.view.google_2fa_input,self.view.auth_email_input,
+                    self.view.auth_phone_input,self.view.fund_password_input,
+                    self.view.identity_data_input
                 ]
             
             has_valid_default_fields = any(field.text().strip() for field in data_fields)
@@ -86,9 +86,9 @@ class Controller:
         elif category == 'Exchange':
             return [
                 self.view.exchange_account_input, self.view.exchange_password_input,
-                self.view.google_2fa_input, self.view.phone_number_input,
-                self.view.auth_email_input, self.view.auth_phone_input,
-                self.view.fund_password_input, self.view.identity_data_input
+                self.view.google_2fa_input,self.view.auth_email_input,
+                self.view.auth_phone_input,self.view.fund_password_input,
+                self.view.identity_data_input
             ]
         return []
 
@@ -117,7 +117,6 @@ class Controller:
                 self.view.exchange_account_input.text(),
                 self.view.exchange_password_input.text(),
                 self.view.google_2fa_input.text(),
-                self.view.phone_number_input.text(),
                 self.view.auth_email_input.text(),
                 self.view.auth_phone_input.text(),
                 self.view.fund_password_input.text(),
@@ -167,16 +166,15 @@ class Controller:
                 self.view.private_key_input.setText(data_parts[1])
                 custom_data_parts = data_parts[2:]
         elif category == 'Exchange':
-            if len(data_parts) >= 8:
+            if len(data_parts) >= 7:
                 self.view.exchange_account_input.setText(data_parts[0])
                 self.view.exchange_password_input.setText(data_parts[1])
                 self.view.google_2fa_input.setText(data_parts[2])
-                self.view.phone_number_input.setText(data_parts[3])
-                self.view.auth_email_input.setText(data_parts[4])
-                self.view.auth_phone_input.setText(data_parts[5])
-                self.view.fund_password_input.setText(data_parts[6])
-                self.view.identity_data_input.setText(data_parts[7])
-                custom_data_parts = data_parts[8:]
+                self.view.auth_email_input.setText(data_parts[3])
+                self.view.auth_phone_input.setText(data_parts[4])
+                self.view.fund_password_input.setText(data_parts[5])
+                self.view.identity_data_input.setText(data_parts[6])
+                custom_data_parts = data_parts[7:]
         else:  # Others
             custom_data_parts = data_parts
 
