@@ -27,7 +27,7 @@ class Controller:
         identifier = self.view.identifier_input.text()
         if category == 'Wallet':
             data = ','.join([self.view.wallet_seed_input.text(), self.view.private_key_input.text()])
-        else:  # Exchange
+        elif category == 'Exchange':
             data = ','.join([
                 self.view.exchange_account_input.text(),
                 self.view.exchange_password_input.text(),
@@ -38,6 +38,9 @@ class Controller:
                 self.view.fund_password_input.text(),
                 self.view.identity_data_input.text()
             ])
+        else:  # Others
+            data = ''
+
         custom_data = []
         for custom_field_widget, name_input, value_input in self.view.custom_fields:
             name = name_input.text().strip()
@@ -68,24 +71,14 @@ class Controller:
         # 移除之前的自定義欄位
         self.view.remove_custom_fields()
 
+        custom_data_parts = []  # 初始化為空列表以避免 UnboundLocalError
+
         if category == 'Wallet':
-            # 確保有足夠的資料來填充預設欄位
             if len(data_parts) >= 2:
                 self.view.wallet_seed_input.setText(data_parts[0])
                 self.view.private_key_input.setText(data_parts[1])
-                custom_data_parts = data_parts[2:]  # 剩餘的視為自定義欄位
-            for custom_data in custom_data_parts:
-                name_value_pair = custom_data.split(':', 1)
-                if len(name_value_pair) == 2:
-                    name, value = name_value_pair
-                    self.view.add_custom_field(name.strip(), value.strip())
-                    # 如果 name_widget 是 QLineEdit,設置它的文本
-                    if isinstance(self.view.custom_fields[-1][1], QLineEdit):
-                        self.view.custom_fields[-1][1].setText(name.strip())
-                else:
-                    QMessageBox.warning(self.view, "Error", f"Invalid custom field format: {custom_data}")
-                    return
-        else:  # Exchange
+                custom_data_parts = data_parts[2:]
+        elif category == 'Exchange':
             if len(data_parts) >= 8:
                 self.view.exchange_account_input.setText(data_parts[0])
                 self.view.exchange_password_input.setText(data_parts[1])
@@ -95,18 +88,20 @@ class Controller:
                 self.view.auth_phone_input.setText(data_parts[5])
                 self.view.fund_password_input.setText(data_parts[6])
                 self.view.identity_data_input.setText(data_parts[7])
-                custom_data_parts = data_parts[8:]  # 剩餘的視為自定義欄位
-            for custom_data in custom_data_parts:
-                name_value_pair = custom_data.split(':', 1)
-                if len(name_value_pair) == 2:
-                    name, value = name_value_pair
-                    self.view.add_custom_field(name.strip(), value.strip())
-                    # 如果 name_widget 是 QLineEdit,設置它的文本
-                    if isinstance(self.view.custom_fields[-1][1], QLineEdit):
-                        self.view.custom_fields[-1][1].setText(name.strip())
-                else:
-                    QMessageBox.warning(self.view, "Error", f"Invalid custom field format: {custom_data}")
-                    return
+                custom_data_parts = data_parts[8:]
+
+        for custom_data in custom_data_parts:
+            name_value_pair = custom_data.split(':', 1)
+            if len(name_value_pair) == 2:
+                name, value = name_value_pair
+                self.view.add_custom_field(name.strip(), value.strip())
+                # 如果 name_widget 是 QLineEdit,設置它的文本
+                if isinstance(self.view.custom_fields[-1][1], QLineEdit):
+                    self.view.custom_fields[-1][1].setText(name.strip())
+            else:
+                QMessageBox.warning(self.view, "Error", f"Invalid custom field format: {custom_data}")
+                return
+
 
 
     def update_data_list(self, index):

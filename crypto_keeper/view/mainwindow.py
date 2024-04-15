@@ -27,7 +27,7 @@ class Mainwindow(QWidget):
         # Category combo box
         category_layout = QHBoxLayout()
         category_label = QComboBox()
-        category_label.addItems(['Wallet', 'Exchange'])
+        category_label.addItems(['Wallet', 'Exchange', 'Others'])
         self.category_combo = category_label
         category_layout.addWidget(category_label)
         layout.addLayout(category_layout)
@@ -114,7 +114,7 @@ class Mainwindow(QWidget):
             self.private_key_input = QLineEdit()
             self.data_input_layout.addWidget(private_key_label)
             self.data_input_layout.addWidget(self.private_key_input)
-        else:  # Exchange
+        elif index == 1:  # Exchange
             exchange_account_label = QLabel('Exchange Account:')
             self.exchange_account_input = QLineEdit()
             self.data_input_layout.addWidget(exchange_account_label)
@@ -154,6 +154,9 @@ class Mainwindow(QWidget):
             self.identity_data_input = QLineEdit()
             self.data_input_layout.addWidget(identity_data_label)
             self.data_input_layout.addWidget(self.identity_data_input)
+        else:  # Others
+            # 為 Others 分類不加載任何預設欄位
+            pass
 
     def connect_data_input_events(self):
         if self.category_combo.currentIndex() == 0:  # Wallet
@@ -181,7 +184,7 @@ class Mainwindow(QWidget):
         if self.category_combo.currentIndex() == 0:  # Wallet
             self.wallet_seed_input.clear()
             self.private_key_input.clear()
-        else:  # Exchange
+        elif self.category_combo.currentIndex() == 1:  # Exchange
             self.exchange_account_input.clear()
             self.exchange_password_input.clear()
             self.google_2fa_input.clear()
@@ -190,6 +193,8 @@ class Mainwindow(QWidget):
             self.auth_phone_input.clear()
             self.fund_password_input.clear()
             self.identity_data_input.clear()
+        else:  # Others
+            pass
 
     def add_custom_field(self, name=None, value=None):
         # Create the custom field container widget
@@ -232,7 +237,7 @@ class Mainwindow(QWidget):
         if self.category_combo.currentIndex() == 0:  # Wallet
             self.wallet_seed_input.clear()
             self.private_key_input.clear()
-        else:  # Exchange
+        elif self.category_combo.currentIndex() == 1:  # Exchange
             self.exchange_account_input.clear()
             self.exchange_password_input.clear()
             self.google_2fa_input.clear()
@@ -241,4 +246,6 @@ class Mainwindow(QWidget):
             self.auth_phone_input.clear()
             self.fund_password_input.clear()
             self.identity_data_input.clear()
+        else:  # Others
+            pass
         self.remove_custom_fields()
