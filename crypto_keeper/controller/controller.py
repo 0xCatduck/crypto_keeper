@@ -1,5 +1,5 @@
 # crypto_keeper/controller/controller.py
-from PySide6.QtWidgets import QMessageBox
+from PySide6.QtWidgets import QMessageBox, QLineEdit
 
 class Controller:
     def __init__(self, model, view):
@@ -78,16 +78,14 @@ class Controller:
                 name_value_pair = custom_data.split(':', 1)
                 if len(name_value_pair) == 2:
                     name, value = name_value_pair
-                    self.view.add_custom_field()
-                    # 正確設置 QLineEdit 的文本
-                    self.view.custom_fields[-1][1].setText(name.strip())  # 設置名稱欄位的文本
-                    self.view.custom_fields[-1][2].setText(value.strip())  # 設置值欄位的文本
+                    self.view.add_custom_field(name.strip(), value.strip())
+                    # 如果 name_widget 是 QLineEdit,設置它的文本
+                    if isinstance(self.view.custom_fields[-1][1], QLineEdit):
+                        self.view.custom_fields[-1][1].setText(name.strip())
                 else:
                     QMessageBox.warning(self.view, "Error", f"Invalid custom field format: {custom_data}")
                     return
         else:  # Exchange
-            # ... 為交易所設置欄位 ...
-            # 確保有足夠的資料來填充交易所的欄位
             if len(data_parts) >= 8:
                 self.view.exchange_account_input.setText(data_parts[0])
                 self.view.exchange_password_input.setText(data_parts[1])
@@ -102,10 +100,10 @@ class Controller:
                 name_value_pair = custom_data.split(':', 1)
                 if len(name_value_pair) == 2:
                     name, value = name_value_pair
-                    self.view.add_custom_field()
-                    # 正確設置 QLineEdit 的文本
-                    self.view.custom_fields[-1][1].setText(name.strip())  # 設置名稱欄位的文本
-                    self.view.custom_fields[-1][2].setText(value.strip())  # 設置值欄位的文本
+                    self.view.add_custom_field(name.strip(), value.strip())
+                    # 如果 name_widget 是 QLineEdit,設置它的文本
+                    if isinstance(self.view.custom_fields[-1][1], QLineEdit):
+                        self.view.custom_fields[-1][1].setText(name.strip())
                 else:
                     QMessageBox.warning(self.view, "Error", f"Invalid custom field format: {custom_data}")
                     return

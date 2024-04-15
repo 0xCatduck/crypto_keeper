@@ -1,10 +1,10 @@
 # crypto_keeper/view/mainwindow.py
 
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QComboBox, QLineEdit, QPushButton, QListWidget, QLabel, QApplication, QListWidget
+    QWidget, QVBoxLayout, QHBoxLayout, QComboBox, QLineEdit, QPushButton, QListWidget, QLabel, QApplication, QListWidget, QSizePolicy
 )
-from PySide6.QtCore import QThread, Signal
-from PySide6.QtGui import QIcon
+from PySide6.QtGui import QFont
+
 class Mainwindow(QWidget):
     def __init__(self, model):
         super().__init__()
@@ -13,8 +13,12 @@ class Mainwindow(QWidget):
         self.custom_fields = []
 
     def init_ui(self):
-        self.setWindowTitle('Digital Legacy Safe')
+        self.setWindowTitle('Crypto Keeper')
         layout = QVBoxLayout(self)
+
+        # Set size policy for the main layout
+        size_policy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.setSizePolicy(size_policy)
 
         # Add icon
         #self.setWindowIcon(QIcon('icon.png'))
@@ -44,20 +48,36 @@ class Mainwindow(QWidget):
         button_layout = QHBoxLayout()
         self.add_field_button = QPushButton('Add Custom Field')
         self.add_field_button.clicked.connect(self.add_custom_field)
-        layout.addWidget(self.add_field_button)
+        button_layout.addWidget(self.add_field_button)
+        self.reset_button = QPushButton('Reset')  
+        self.reset_button.clicked.connect(self.reset_fields)  
+        button_layout.addWidget(self.reset_button)  
+        layout.addLayout(button_layout)
+
+        button_layout2 = QHBoxLayout()
         self.save_button = QPushButton('Save')
         self.save_button.setEnabled(False)
         self.retrieve_button = QPushButton('Retrieve')
-        button_layout.addWidget(self.save_button)
-        button_layout.addWidget(self.retrieve_button)
-        layout.addLayout(button_layout)
         self.delete_button = QPushButton('Delete')
         self.delete_button.setEnabled(False)  # 初始時禁用刪除按鈕
-        button_layout.addWidget(self.delete_button)
+        button_layout2.addWidget(self.save_button)
+        button_layout2.addWidget(self.retrieve_button)
+        button_layout2.addWidget(self.delete_button)  # 將刪除按鈕添加到第二個按鈕佈局
+        layout.addLayout(button_layout2)
 
         # Data list
         self.data_list = QListWidget()
         layout.addWidget(self.data_list)
+
+        # Set size policy for all widgets
+        size_policy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.data_input_widget.setSizePolicy(size_policy)
+        self.data_list.setSizePolicy(size_policy)
+
+        # Set font size for all widgets
+        font = QFont()
+        font.setPointSize(12)  # 設置初始字體大小
+        self.setFont(font)
 
         # update data list when opening the window
         self.category_combo.currentIndexChanged.connect(self.update_data_inputs)
@@ -167,20 +187,29 @@ class Mainwindow(QWidget):
             self.fund_password_input.clear()
             self.identity_data_input.clear()
 
-    def add_custom_field(self):
+    def add_custom_field(self, name=None, value=None):
         # Create the custom field container widget
         custom_field_widget = QWidget()
         custom_field_layout = QHBoxLayout(custom_field_widget)
-        name_input = QLineEdit()
-        name_input.setPlaceholderText('Field Name')
+        
+        if name:
+            name_widget = QLabel(name)
+        else:
+            name_widget = QLineEdit()
+            name_widget.setPlaceholderText('Field Name')
+        
         value_input = QLineEdit()
-        value_input.setPlaceholderText('Field Value')
-        custom_field_layout.addWidget(name_input)
+        if value:
+            value_input.setText(value)
+        else:
+            value_input.setPlaceholderText('Field Value')
+        
+        custom_field_layout.addWidget(name_widget)
         custom_field_layout.addWidget(value_input)
         
         # Add the entire widget to the layout, not just the QLineEdit components
         self.data_input_layout.addWidget(custom_field_widget)
-        self.custom_fields.append((custom_field_widget, name_input, value_input))  # Include the widget itself
+        self.custom_fields.append((custom_field_widget, name_widget, value_input))  # Include the widget itself
 
     def remove_custom_fields(self):
         # Remove all custom field widgets from the layout
@@ -193,3 +222,19 @@ class Mainwindow(QWidget):
     def enable_delete_button(self):
         has_selection = self.data_list.currentRow() >= 0
         self.delete_button.setEnabled(has_selection)
+
+    def reset_fields(self):
+        self.identifier_input.clear()
+        if self.category_combo.currentIndex() == 0:  # Wallet
+            self.wallet_seed_input.clear()
+            self.private_key_input.clear()
+        else:  # Exchange
+            self.exchange_account_input.clear()
+            self.exchange_password_input.clear()
+            self.google_2fa_input.clear()
+            self.phone_number_input.clear()
+            self.auth_email_input.clear()
+            self.auth_phone_input.clear()
+            self.fund_password_input.clear()
+            self.identity_data_input.clear()
+        self.remove_custom_fields()
