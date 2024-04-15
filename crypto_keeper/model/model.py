@@ -47,9 +47,18 @@ class LegacyModel:
                 encrypted_data = base64.b64decode(encrypted_data.encode('utf-8'))
                 decryptor = self.cipher.decryptor()
                 unpadder = padding.PKCS7(algorithms.AES.block_size).unpadder()
-                decrypted_data = unpadder.update(decryptor.update(encrypted_data) + decryptor.finalize()) + unpadder.finalize()
-                return decrypted_data.decode('utf-8')
+                
+                # Decrypt and unpad the data
+                decrypted_data = decryptor.update(encrypted_data) + decryptor.finalize()
+                try:
+                    unpadded_data = unpadder.update(decrypted_data) + unpadder.finalize()
+                    return unpadded_data.decode('utf-8')
+                except ValueError:
+                    print("Padding verification failed.")
+                    return None
         return None
+
+
 
     def save_data(self):
         try:
