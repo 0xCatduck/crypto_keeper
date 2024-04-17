@@ -1,0 +1,48 @@
+name: Python application build and release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.11
+
+    - name: Install dependencies from requirements.txt
+      run: |
+        pip install -r requirements.txt
+
+    - name: Install PyInstaller
+      run: pip install pyinstaller
+        
+    - name: Build the application
+      run: pyinstaller --onefile --windowed --icon=icon.ico --add-data "icon.png;." main.py
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.get_version.outputs.VERSION }}
+        release_name: Release ${{ steps.get_version.outputs.VERSION }}
+        draft: false
+        prerelease: false
+
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./dist/main.exe
+        asset_name: crypto-keeper-windows-${{ steps.get_version.outputs.VERSION }}.exe
+        asset_content_type: application/octet-stream
