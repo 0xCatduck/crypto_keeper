@@ -30,55 +30,33 @@ class Controller:
         category = self.view.category_combo.currentText()
         identifier = text.strip()
 
-        # 判斷是否有有效的 identifier
         has_valid_identifier = bool(identifier)
-
-        # 初始設定為不能儲存
-        can_save = False
-
-        if category == 'Others':
-            # 對於 "Others" 分類，確保有自定義欄位且欄位有值
-            has_valid_custom_fields = any(
-                name_widget.text().strip() and value_input.text().strip()
-                for _, name_widget, value_input in self.view.custom_fields
-            )
-            can_save = has_valid_identifier and has_valid_custom_fields
-        else:
-            # 對於 "Wallet" 或 "Exchange"，確保至少有一個預設資料欄位被填寫
-            data_fields = []
-            if category == 'Wallet':
-                data_fields = [self.view.wallet_seed_input, self.view.private_key_input]
-            elif category == 'Exchange':
-                data_fields = [
-                    self.view.exchange_account_input, self.view.exchange_password_input,
-                    self.view.google_2fa_input,self.view.auth_email_input,
-                    self.view.auth_phone_input,self.view.fund_password_input,
-                    self.view.identity_data_input
-                ]
-            
-            has_valid_default_fields = any(field.text().strip() for field in data_fields)
-            can_save = has_valid_identifier and has_valid_default_fields
+        can_save = self.can_save(category, has_valid_identifier)
 
         self.view.save_button.setEnabled(can_save)
 
+    def has_valid_custom_fields(self):
+        return any(
+            name_widget.text().strip() and value_input.text().strip()
+            for _, name_widget, value_input in self.view.custom_fields
+        )
+
+    def can_save(self, category, has_valid_identifier):
+        if category == 'Others':
+            has_valid_custom_fields = self.has_valid_custom_fields()
+            return has_valid_identifier and has_valid_custom_fields
+        else:
+            data_fields = self.get_data_fields(category)
+            has_valid_default_fields = any(field.text().strip() for field in data_fields)
+            return has_valid_identifier and has_valid_default_fields
+
     def update_save_button_state(self):
-        # 從視圖中檢索當前類別
         category = self.view.category_combo.currentText()
         identifier = self.view.identifier_input.text().strip()
         has_valid_identifier = bool(identifier)
-        
-        if category == 'Others':
-            # 對於 "Others" 分類，確保有自定義欄位且欄位有值
-            has_valid_custom_fields = any(
-                name_widget.text().strip() and value_input.text().strip()
-                for _, name_widget, value_input in self.view.custom_fields
-            )
-            self.view.save_button.setEnabled(has_valid_identifier and has_valid_custom_fields)
-        else:
-            # 對於 "Wallet" 或 "Exchange"，確保至少有一個預設資料欄位被填寫
-            data_fields = self.get_default_fields(category)
-            has_valid_default_fields = any(field.text().strip() for field in data_fields)
-            self.view.save_button.setEnabled(has_valid_identifier and has_valid_default_fields)
+
+        can_save = self.can_save(category, has_valid_identifier)
+        self.view.save_button.setEnabled(can_save)
 
     def get_default_fields(self, category):
         if category == 'Wallet':
@@ -97,57 +75,67 @@ class Controller:
         category = self.view.category_combo.currentText()
         identifier = self.view.identifier_input.text()
 
-        # 檢查是否存在同名條目，並要求確認覆蓋
+        if not self.confirm_overwrite(category, identifier):
+            return
+
+        data_fields = self.get_data_fields(category)
+        custom_data = self.get_custom_data()
+
+        all_data = ','.join(data_fields + custom_data)
+
+        try:
+            self.model.encrypt_and_store(category, identifier, all_data)
+            self.view.remove_custom_fields()
+            self.update_data_list(self.view.category_combo.currentIndex())
+            self.view.clear_data_fields()
+        except Exception as e:
+            QMessageBox.critical(self.view, "Error", f"Failed to save data: {str(e)}")
+
+    def confirm_overwrite(self, category, identifier):
         if identifier in self.model.data.get(category, {}):
             reply = QMessageBox.question(
                 self.view, 'Confirm Save',
                 f"'{identifier}' already exists for '{category}'. Do you want to overwrite it?",
                 QMessageBox.Yes | QMessageBox.No, QMessageBox.No
             )
-            if reply != QMessageBox.Yes:
-                return  # 如果用戶選擇不覆蓋，則直接返回，不進行下面的保存操作
-            
-        # 預設資料欄位，根據類別來決定是否包含
+            return reply == QMessageBox.Yes
+        return True
+
+    def get_data_fields(self, category):
         data_fields = []
         if category == 'Wallet':
-            data_fields.append(self.view.wallet_seed_input.text())
-            data_fields.append(self.view.private_key_input.text())
+            data_fields.append(self.view.wallet_seed_input)
+            data_fields.append(self.view.private_key_input)
         elif category == 'Exchange':
             data_fields.extend([
-                self.view.exchange_account_input.text(),
-                self.view.exchange_password_input.text(),
-                self.view.google_2fa_input.text(),
-                self.view.auth_email_input.text(),
-                self.view.auth_phone_input.text(),
-                self.view.fund_password_input.text(),
-                self.view.identity_data_input.text()
+                self.view.exchange_account_input,
+                self.view.exchange_password_input,
+                self.view.google_2fa_input,
+                self.view.auth_email_input,
+                self.view.auth_phone_input,
+                self.view.fund_password_input,
+                self.view.identity_data_input
             ])
+        return data_fields
 
-        # 將預設資料欄位與自定義欄位合併
+    def get_custom_data(self):
         custom_data = []
         for custom_field_widget, name_input, value_input in self.view.custom_fields:
             name = name_input.text().strip()
             value = value_input.text().strip()
-            if name and value:  # 確保名稱和值都不是空的
+            if name and value:
                 custom_data.append(f"{name}:{value}")
-
-        # 如果 data_fields 為空，則全部數據為自定義欄位
-        all_data = ','.join(data_fields + custom_data)
-
-        # 儲存加密的數據
-        self.model.encrypt_and_store(category, identifier, all_data)
-        self.view.remove_custom_fields()  # 儲存後移除自定義欄位
-        self.update_data_list(self.view.category_combo.currentIndex())
-        self.view.clear_data_fields()
-
+        return custom_data
 
     def retrieve_data(self):
         current_item = self.view.data_list.currentItem()
         if current_item is None:
             return
+
         category = self.view.category_combo.currentText()
         identifier = self.view.data_list.currentItem().text()
         decrypted_data = self.model.decrypt_and_retrieve(category, identifier)
+
         if decrypted_data is None:
             QMessageBox.warning(self.view, "Error", "Failed to retrieve data, please check the key.txt file.")
             return
@@ -155,16 +143,16 @@ class Controller:
         self.view.identifier_input.setText(identifier)
         data_parts = decrypted_data.split(',')
 
-        # 移除之前的自定義欄位
         self.view.remove_custom_fields()
 
-        custom_data_parts = []  # 初始化為空列表以避免 UnboundLocalError
+        self.populate_default_fields(category, data_parts)
+        self.populate_custom_fields(category, data_parts)
 
+    def populate_default_fields(self, category, data_parts):
         if category == 'Wallet':
             if len(data_parts) >= 2:
                 self.view.wallet_seed_input.setText(data_parts[0])
                 self.view.private_key_input.setText(data_parts[1])
-                custom_data_parts = data_parts[2:]
         elif category == 'Exchange':
             if len(data_parts) >= 7:
                 self.view.exchange_account_input.setText(data_parts[0])
@@ -174,6 +162,14 @@ class Controller:
                 self.view.auth_phone_input.setText(data_parts[4])
                 self.view.fund_password_input.setText(data_parts[5])
                 self.view.identity_data_input.setText(data_parts[6])
+
+    def populate_custom_fields(self, category, data_parts):
+        custom_data_parts = []
+        if category == 'Wallet':
+            if len(data_parts) >= 2:
+                custom_data_parts = data_parts[2:]
+        elif category == 'Exchange':
+            if len(data_parts) >= 7:
                 custom_data_parts = data_parts[7:]
         else:  # Others
             custom_data_parts = data_parts
@@ -187,17 +183,14 @@ class Controller:
                 QMessageBox.warning(self.view, "Error", f"Invalid custom field format: {custom_data}")
                 return
 
-
-
     def update_data_list(self, index):
         category = self.view.category_combo.itemText(index)
         self.view.data_list.clear()
         if category in self.model.data:
             self.view.data_list.addItems(self.model.data[category].keys())
 
-    def update_data_list_selection(self, row):
-        if row >= 0:
-            self.view.clear_data_fields()
+    def update_data_list_selection(self, current_item):
+        self.view.enable_delete_button(current_item)
 
     # 添加一個方法來處理刪除事件
     def confirm_delete(self):
@@ -213,6 +206,11 @@ class Controller:
 
             if reply == QMessageBox.Yes:
                 self.delete_data(selected_item.text())
+
+    def delete_data(self, identifier):
+        category = self.view.category_combo.currentText()
+        self.model.delete_data(category, identifier)  # 呼叫模型的 delete_data 方法
+        self.update_data_list(self.view.category_combo.currentIndex())  # 更新數據列表
 
 
     # 添加一個方法來刪除數據

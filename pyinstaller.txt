@@ -1,4 +1,4 @@
 Windows:
-
+pyinstaller --onefile --windowed --icon="view/icon.ico" --add-data "view/icon.png;view" main.py
 
 Mac:
