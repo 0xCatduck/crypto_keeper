@@ -23,11 +23,9 @@ jobs:
     - name: Install PyInstaller
       run: pip install pyinstaller
     
-    - name: Change directory
-      run: cd crypto_keeper
-
     - name: Build the application
       run: pyinstaller --onefile --windowed --icon=view/icon.ico --add-data "view/icon.png;." main.py
+      working-directory: ./crypto_keeper
 
     - name: Create Release
       id: create_release
