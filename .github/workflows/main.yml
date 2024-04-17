@@ -22,9 +22,19 @@ jobs:
 
     - name: Install PyInstaller
       run: pip install pyinstaller
-    
+
     - name: Build the application
       run: pyinstaller --onefile --windowed --icon=view/icon.ico --add-data "view/icon.png;." main.py
+      working-directory: ./crypto_keeper
+
+    - name: Create CryptoKeeper folder and move exe
+      run: |
+        mkdir CryptoKeeper
+        move dist\main.exe CryptoKeeper\CryptoKeeper.exe
+      working-directory: ./crypto_keeper
+
+    - name: Zip CryptoKeeper folder
+      run: Compress-Archive -Path CryptoKeeper -DestinationPath CryptoKeeper.zip
       working-directory: ./crypto_keeper
 
     - name: Create Release
@@ -44,6 +54,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./dist/main.exe
-        asset_name: crypto-keeper-windows-${{ github.ref }}.exe
-        asset_content_type: application/octet-stream
+        asset_path: ./crypto_keeper/CryptoKeeper.zip
+        asset_name: CryptoKeeper-Windows-${{ github.ref }}.zip
+        asset_content_type: application/zip
