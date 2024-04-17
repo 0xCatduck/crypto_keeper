@@ -1,59 +1,43 @@
-name: Python application build and release
+name: Manual Python Application Build and Release
 
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag (e.g., v1.0.0)'
+        required: true
 
 jobs:
   build-and-release:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v3  # 更新至支持 Node.js 20 的版本
-
+    - uses: actions/checkout@v2
     - name: Set up Python 3.11
-      uses: actions/setup-python@v3  # 假設 v3 支持 Node.js 20
+      uses: actions/setup-python@v2
       with:
         python-version: 3.11
-
-    - name: Install dependencies from requirements.txt
-      run: |
-        pip install -r requirements.txt
-
+    - name: Install dependencies
+      run: pip install -r requirements.txt
     - name: Install PyInstaller
       run: pip install pyinstaller
-        
     - name: Build the application
       run: pyinstaller --onefile --windowed --icon=crypto_keeper/view/icon.ico --add-data "crypto_keeper/view/icon.png;." crypto_keeper/main.py
-    
-    - name: Print GITHUB_REF
-      run: echo "GITHUB_REF=${{ github.ref }}"
-    
-    - name: Get the version
-      id: get_version
-      run: echo "VERSION=${{ github.ref_name }}" >> $GITHUB_ENV
-    
-    - name: Print VERSION
-      run: echo "Resolved VERSION=$VERSION"
-
     - name: Create Release
-      id: create_release
-      uses: actions/create-release@v2  # 假設 v2 支持 Node.js 20
+      uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ steps.get_version.outputs.VERSION }}
-        release_name: Release ${{ steps.get_version.outputs.VERSION }}
+        tag_name: ${{ github.event.inputs.version }}
+        release_name: Release ${{ github.event.inputs.version }}
         draft: false
         prerelease: false
-
     - name: Upload Release Asset
-      uses: actions/upload-release-asset@v2  # 檢查是否有更新版本支持 Node.js 20
+      uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: ./dist/main.exe
-        asset_name: crypto-keeper-windows-${{ steps.get_version.outputs.VERSION }}.exe
+        asset_name: crypto-keeper-windows-${{ github.event.inputs.version }}.exe
         asset_content_type: application/octet-stream
 
