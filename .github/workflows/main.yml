@@ -1,36 +1,42 @@
-name: Manual Python Application Build and Release
+name: Automatic Python Application Build and Release
 
 on:
-  workflow_dispatch:
-    inputs:
-      version:
-        description: 'Version tag (e.g., v1.0.0)'
-        required: true
+  push:
+    tags:
+      - 'v*'
 
 jobs:
   build-and-release:
     runs-on: windows-latest
+
     steps:
     - uses: actions/checkout@v2
+
     - name: Set up Python 3.11
       uses: actions/setup-python@v2
       with:
         python-version: 3.11
+
     - name: Install dependencies
       run: pip install -r requirements.txt
+
     - name: Install PyInstaller
       run: pip install pyinstaller
+
     - name: Build the application
       run: pyinstaller --onefile --windowed --icon=crypto_keeper/view/icon.ico --add-data "crypto_keeper/view/icon.png;." crypto_keeper/main.py
+
     - name: Create Release
+      id: create_release
       uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ github.event.inputs.version }}
-        release_name: Release ${{ github.event.inputs.version }}
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
         draft: false
         prerelease: false
+
     - name: Upload Release Asset
       uses: actions/upload-release-asset@v1
       env:
@@ -38,6 +44,5 @@ jobs:
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: ./dist/main.exe
-        asset_name: crypto-keeper-windows-${{ github.event.inputs.version }}.exe
+        asset_name: crypto-keeper-windows-${{ github.ref }}.exe
         asset_content_type: application/octet-stream
-
