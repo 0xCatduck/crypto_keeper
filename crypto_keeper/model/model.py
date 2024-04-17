@@ -30,36 +30,44 @@ class LegacyModel:
         self.cipher = Cipher(algorithms.AES(self.key), modes.CBC(bytes.fromhex(self.data['iv'])))
 
 
-    def encrypt_and_store(self, category, identifier, plaintext):
-        #print(f"Encrypting data for {category}: {plaintext}")  
+    def encrypt_data(self, plaintext):
         encryptor = self.cipher.encryptor()
         padder = padding.PKCS7(algorithms.AES.block_size).padder()
         padded_data = padder.update(plaintext.encode('utf-8')) + padder.finalize()
         encrypted_data = encryptor.update(padded_data) + encryptor.finalize()
+        return base64.b64encode(encrypted_data).decode('utf-8')
 
+    def decrypt_data(self, encrypted_data):
+        encrypted_data = base64.b64decode(encrypted_data.encode('utf-8'))
+        decryptor = self.cipher.decryptor()
+        unpadder = padding.PKCS7(algorithms.AES.block_size).unpadder()
+
+        decrypted_data = decryptor.update(encrypted_data) + decryptor.finalize()
+        try:
+            unpadded_data = unpadder.update(decrypted_data) + unpadder.finalize()
+            return unpadded_data.decode('utf-8')
+        except ValueError:
+            print("Padding verification failed.")
+            return None
+
+    def encrypt_and_store(self, category, identifier, plaintext):
+        encrypted_data = self.encrypt_data(plaintext)
         if category not in self.data:
             self.data[category] = {}
-        self.data[category][identifier] = base64.b64encode(encrypted_data).decode('utf-8')
+        self.data[category][identifier] = encrypted_data
         self.save_data()
 
     def decrypt_and_retrieve(self, category, identifier):
         if category in self.data:
             encrypted_data = self.data[category].get(identifier)
-            #print(f"Retrieved encrypted data for {category}: {encrypted_data}") 
             if encrypted_data:
-                encrypted_data = base64.b64decode(encrypted_data.encode('utf-8'))
-                decryptor = self.cipher.decryptor()
-                unpadder = padding.PKCS7(algorithms.AES.block_size).unpadder()
-
-                decrypted_data = decryptor.update(encrypted_data) + decryptor.finalize()
-                try:
-                    unpadded_data = unpadder.update(decrypted_data) + unpadder.finalize()
-                    #print(f"Decrypted data: {unpadded_data.decode('utf-8')}") 
-                    return unpadded_data.decode('utf-8')
-                except ValueError:
-                    print("Padding verification failed.")
-                    return None
+                return self.decrypt_data(encrypted_data)
         return None
+
+    def delete_data(self, category, identifier):
+        if category in self.data and identifier in self.data[category]:
+            del self.data[category][identifier]
+            self.save_data()
 
 
 

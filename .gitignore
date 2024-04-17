@@ -1,3 +1,6 @@
 *.pyc
 crypto_keeper/key.txt
 crypto_keeper/legacy_data.json
+crypto_keeper/build
+crypto_keeper/main.spec
+crypto_keeper/dist

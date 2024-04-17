@@ -5,6 +5,15 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtGui import QFont
 from PySide6.QtGui import QIcon
+import os
+import sys
+
+if getattr(sys, 'frozen', False):
+    # The application is frozen
+    bundle_dir = sys._MEIPASS
+else:
+    # The application is not frozen
+    bundle_dir = os.path.dirname(os.path.abspath(__file__))
 
 class Mainwindow(QWidget):
     def __init__(self, model):
@@ -23,7 +32,8 @@ class Mainwindow(QWidget):
         self.setSizePolicy(size_policy)
 
         # Add icon
-        self.setWindowIcon(QIcon('view/icon.png'))
+        icon_path = os.path.join(bundle_dir, 'view', 'icon.png')
+        self.setWindowIcon(QIcon(icon_path))
 
         # Category combo box
         category_layout = QHBoxLayout()
@@ -73,6 +83,7 @@ class Mainwindow(QWidget):
 
         # Data list
         self.data_list = QListWidget()
+        self.data_list.currentItemChanged.connect(self.enable_delete_button)
         layout.addWidget(self.data_list)
 
         # Set size policy for all widgets
@@ -100,23 +111,31 @@ class Mainwindow(QWidget):
             self.data_list.addItems(self.model.data[category].keys())
 
     def update_data_inputs(self, index):
-        
         for i in reversed(range(self.data_input_layout.count())):
             self.data_input_layout.itemAt(i).widget().setParent(None)
 
         if index == 0:  # Wallet
-            wallet_seed_label = QLabel('Wallet Seed:')
-            self.wallet_seed_input = QLineEdit()
-            self.wallet_seed_input.textChanged.connect(self.update_save_button_state)
-            self.data_input_layout.addWidget(wallet_seed_label)
-            self.data_input_layout.addWidget(self.wallet_seed_input)
-
-            private_key_label = QLabel('Private Key:')
-            self.private_key_input = QLineEdit()
-            self.private_key_input.textChanged.connect(self.update_save_button_state)
-            self.data_input_layout.addWidget(private_key_label)
-            self.data_input_layout.addWidget(self.private_key_input)
+            self.add_wallet_inputs()
         elif index == 1:  # Exchange
+            self.add_exchange_inputs()
+        else:  # Others
+            # 為 Others 分類不加載任何預設欄位
+            pass
+
+    def add_wallet_inputs(self):
+        wallet_seed_label = QLabel('Wallet Seed:')
+        self.wallet_seed_input = QLineEdit()
+        self.wallet_seed_input.textChanged.connect(self.update_save_button_state)
+        self.data_input_layout.addWidget(wallet_seed_label)
+        self.data_input_layout.addWidget(self.wallet_seed_input)
+
+        private_key_label = QLabel('Private Key:')
+        self.private_key_input = QLineEdit()
+        self.private_key_input.textChanged.connect(self.update_save_button_state)
+        self.data_input_layout.addWidget(private_key_label)
+        self.data_input_layout.addWidget(self.private_key_input)
+
+    def add_exchange_inputs(self):
             exchange_account_label = QLabel('Exchange Account:')
             self.exchange_account_input = QLineEdit()
             self.exchange_account_input.textChanged.connect(self.update_save_button_state)
@@ -158,26 +177,27 @@ class Mainwindow(QWidget):
             self.identity_data_input.textChanged.connect(self.update_save_button_state)
             self.data_input_layout.addWidget(identity_data_label)
             self.data_input_layout.addWidget(self.identity_data_input)
-        else:  # Others
-            # 為 Others 分類不加載任何預設欄位
-            pass
 
     def connect_data_input_events(self):
         if self.category_combo.currentIndex() == 0:  # Wallet
-            self.wallet_seed_input.mouseDoubleClickEvent = lambda event: self.copy_to_clipboard(self.wallet_seed_input)
-            self.private_key_input.mouseDoubleClickEvent = lambda event: self.copy_to_clipboard(self.private_key_input)
-            self.data_list.itemSelectionChanged.connect(self.enable_delete_button)
-        elif self.category_combo.currentIndex() ==1:  # Exchange
-            self.exchange_account_input.mouseDoubleClickEvent = lambda event: self.copy_to_clipboard(self.exchange_account_input)
-            self.exchange_password_input.mouseDoubleClickEvent = lambda event: self.copy_to_clipboard(self.exchange_password_input)
-            self.google_2fa_input.mouseDoubleClickEvent = lambda event: self.copy_to_clipboard(self.google_2fa_input)
-            self.auth_email_input.mouseDoubleClickEvent = lambda event: self.copy_to_clipboard(self.auth_email_input)
-            self.auth_phone_input.mouseDoubleClickEvent = lambda event: self.copy_to_clipboard(self.auth_phone_input)
-            self.fund_password_input.mouseDoubleClickEvent = lambda event: self.copy_to_clipboard(self.fund_password_input)
-            self.identity_data_input.mouseDoubleClickEvent = lambda event: self.copy_to_clipboard(self.identity_data_input)
-            self.data_list.itemSelectionChanged.connect(self.enable_delete_button)
+            self.connect_wallet_events()
+        elif self.category_combo.currentIndex() == 1:  # Exchange
+            self.connect_exchange_events()
         else:  # Others
             pass
+
+    def connect_wallet_events(self):
+        self.wallet_seed_input.mouseDoubleClickEvent = lambda event: self.copy_to_clipboard(self.wallet_seed_input)
+        self.private_key_input.mouseDoubleClickEvent = lambda event: self.copy_to_clipboard(self.private_key_input)
+
+    def connect_exchange_events(self):
+        self.exchange_account_input.mouseDoubleClickEvent = lambda event: self.copy_to_clipboard(self.exchange_account_input)
+        self.exchange_password_input.mouseDoubleClickEvent = lambda event: self.copy_to_clipboard(self.exchange_password_input)
+        self.google_2fa_input.mouseDoubleClickEvent = lambda event: self.copy_to_clipboard(self.google_2fa_input)
+        self.auth_email_input.mouseDoubleClickEvent = lambda event: self.copy_to_clipboard(self.auth_email_input)
+        self.auth_phone_input.mouseDoubleClickEvent = lambda event: self.copy_to_clipboard(self.auth_phone_input)
+        self.fund_password_input.mouseDoubleClickEvent = lambda event: self.copy_to_clipboard(self.fund_password_input)
+        self.identity_data_input.mouseDoubleClickEvent = lambda event: self.copy_to_clipboard(self.identity_data_input)
 
     def copy_to_clipboard(self, input_field):
         input_field.selectAll()
@@ -246,8 +266,6 @@ class Mainwindow(QWidget):
         self.custom_fields.clear()  # Clear the list after removing all custom fields
         self.update_save_button_state()
 
-
-
     def update_save_button_state(self):
         category = self.category_combo.currentText()
         identifier = self.identifier_input.text().strip()
@@ -257,56 +275,44 @@ class Mainwindow(QWidget):
             return
 
         if category == 'Others':
-            has_custom_field = any(
-                name_widget.text().strip() and value_input.text().strip()
-                for _, name_widget, value_input in self.custom_fields
-            )
+            has_custom_field = self.has_valid_custom_fields()
             self.save_button.setEnabled(has_custom_field)
         else:
-            default_fields = []
-            if category == 'Wallet':
-                default_fields = [
-                    self.wallet_seed_input.text().strip(),
-                    self.private_key_input.text().strip()
-                ]
-            elif category == 'Exchange':
-                default_fields = [
-                    self.exchange_account_input.text().strip(),
-                    self.exchange_password_input.text().strip(),
-                    self.google_2fa_input.text().strip(),
-                    self.auth_email_input.text().strip(),
-                    self.auth_phone_input.text().strip(),
-                    self.fund_password_input.text().strip(),
-                    self.identity_data_input.text().strip()
-                ]
-
-            has_default_field = any(default_fields)
-            has_custom_field = any(
-                name_widget.text().strip() and value_input.text().strip()
-                for _, name_widget, value_input in self.custom_fields
-            )
+            has_default_field = self.has_valid_default_fields(category)
+            has_custom_field = self.has_valid_custom_fields()
             self.save_button.setEnabled(has_default_field or has_custom_field)
 
+    def has_valid_default_fields(self, category):
+        default_fields = []
+        if category == 'Wallet':
+            default_fields = [
+                self.wallet_seed_input.text().strip(),
+                self.private_key_input.text().strip()
+            ]
+        elif category == 'Exchange':
+            default_fields = [
+                self.exchange_account_input.text().strip(),
+                self.exchange_password_input.text().strip(),
+                self.google_2fa_input.text().strip(),
+                self.auth_email_input.text().strip(),
+                self.auth_phone_input.text().strip(),
+                self.fund_password_input.text().strip(),
+                self.identity_data_input.text().strip()
+            ]
+
+        return any(default_fields)
+
+    def has_valid_custom_fields(self):
+        return any(
+            name_widget.text().strip() and value_input.text().strip()
+            for _, name_widget, value_input in self.custom_fields
+        )
 
 
-
-    def enable_delete_button(self):
-        has_selection = self.data_list.currentRow() >= 0
-        self.delete_button.setEnabled(has_selection)
+    def enable_delete_button(self, item):
+        self.delete_button.setEnabled(item is not None)
 
     def reset_fields(self):
         self.identifier_input.clear()
-        if self.category_combo.currentIndex() == 0:  # Wallet
-            self.wallet_seed_input.clear()
-            self.private_key_input.clear()
-        elif self.category_combo.currentIndex() == 1:  # Exchange
-            self.exchange_account_input.clear()
-            self.exchange_password_input.clear()
-            self.google_2fa_input.clear()
-            self.auth_email_input.clear()
-            self.auth_phone_input.clear()
-            self.fund_password_input.clear()
-            self.identity_data_input.clear()
-        else:  # Others
-            pass
+        self.clear_data_fields()
         self.remove_custom_fields()
