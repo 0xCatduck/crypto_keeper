@@ -24,7 +24,8 @@ jobs:
       run: pip install pyinstaller
         
     - name: Build the application
-      run: pyinstaller --onefile --windowed --icon=icon.ico --add-data "icon.png;." main.py
+      run: pyinstaller --onefile --windowed --icon=crypto_keeper/view/icon.ico --add-data "crypto_keeper/view/icon.png;." crypto_keeper/main.py
+
 
     - name: Create Release
       id: create_release
