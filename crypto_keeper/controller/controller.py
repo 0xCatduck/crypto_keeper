@@ -47,7 +47,7 @@ class Controller:
             return has_valid_identifier and has_valid_custom_fields
         else:
             data_fields = self.get_data_fields(category)
-            has_valid_default_fields = any(field.text().strip() for field in data_fields)
+            has_valid_default_fields = any(field.strip() for field in data_fields)
             return has_valid_identifier and has_valid_default_fields
 
     def update_save_button_state(self):
@@ -104,19 +104,20 @@ class Controller:
     def get_data_fields(self, category):
         data_fields = []
         if category == 'Wallet':
-            data_fields.append(self.view.wallet_seed_input)
-            data_fields.append(self.view.private_key_input)
+            data_fields.append(self.view.wallet_seed_input.text())
+            data_fields.append(self.view.private_key_input.text())
         elif category == 'Exchange':
             data_fields.extend([
-                self.view.exchange_account_input,
-                self.view.exchange_password_input,
-                self.view.google_2fa_input,
-                self.view.auth_email_input,
-                self.view.auth_phone_input,
-                self.view.fund_password_input,
-                self.view.identity_data_input
+                self.view.exchange_account_input.text(),
+                self.view.exchange_password_input.text(),
+                self.view.google_2fa_input.text(),
+                self.view.auth_email_input.text(),
+                self.view.auth_phone_input.text(),
+                self.view.fund_password_input.text(),
+                self.view.identity_data_input.text()
             ])
         return data_fields
+
 
     def get_custom_data(self):
         custom_data = []
