@@ -1,5 +1,6 @@
 # crypto_keeper/model/model.py
 import os
+import sys
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives import padding
 import json
@@ -7,8 +8,18 @@ import base64
 
 class LegacyModel:
     def __init__(self, key_file='key.txt', data_file='legacy_data.json'):
-        self.key_file = key_file
-        self.data_file = data_file
+        # 判斷應用程式是否被 'frozen' 為一個可執行文件
+        if getattr(sys, 'frozen', False):
+            # 如果是，使用 sys._MEIPASS 獲得臨時目錄
+            app_dir = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+        else:
+            # 如果不是，使用當前文件的目錄
+            app_dir = os.path.dirname(os.path.abspath(__file__))
+
+        # 組合文件完整路徑
+        self.key_file = os.path.join(app_dir, key_file)
+        self.data_file = os.path.join(app_dir, data_file)
+        
         self.load_key_and_data()
 
     def load_key_and_data(self):
