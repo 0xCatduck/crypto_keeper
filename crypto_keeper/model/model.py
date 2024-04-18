@@ -8,17 +8,22 @@ import base64
 
 class LegacyModel:
     def __init__(self, key_file='key.txt', data_file='legacy_data.json'):
-        # 判斷應用程式是否被 'frozen' 為一個可執行文件
+        # 確定應用程序的可執行文件所在的目錄
         if getattr(sys, 'frozen', False):
-            # 如果是，使用 sys._MEIPASS 獲得臨時目錄
-            app_dir = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+            # 如果應用程序被打包，使用 sys.executable 獲得路徑
+            app_dir = os.path.dirname(sys.executable)
         else:
-            # 如果不是，使用當前文件的目錄
+            # 如果應用程序未被打包，使用當前腳本的目錄
             app_dir = os.path.dirname(os.path.abspath(__file__))
 
-        # 組合文件完整路徑
-        self.key_file = os.path.join(app_dir, key_file)
-        self.data_file = os.path.join(app_dir, data_file)
+        # 創建一個名為 'data' 的子資料夾
+        data_dir = os.path.join(app_dir, 'data')
+        if not os.path.exists(data_dir):
+            os.makedirs(data_dir)  # 如果 'data' 資料夾不存在，則創建它
+
+        # 組合 key 和 data 文件的完整路徑
+        self.key_file = os.path.join(data_dir, key_file)
+        self.data_file = os.path.join(data_dir, data_file)
         
         self.load_key_and_data()
 
