@@ -6,7 +6,7 @@ on:
       - 'v*'
 
 jobs:
-  build-and-release:
+  build-windows:
     runs-on: windows-latest
 
     steps:
@@ -23,19 +23,65 @@ jobs:
     - name: Install PyInstaller
       run: pip install pyinstaller
 
-    - name: Build the application
+    - name: Build the Windows application
       run: pyinstaller --onefile --windowed --icon="view/icon.ico" --add-data "view/icon.png;view" main.py
       working-directory: ./crypto_keeper
 
-    - name: Create CryptoKeeper folder and move exe
+    - name: Move Windows exe to temporary directory
       run: |
-        mkdir CryptoKeeper
-        move dist\main.exe CryptoKeeper\CryptoKeeper.exe
+        mkdir build
+        move dist\main.exe build\CryptoKeeper-Windows.exe
       working-directory: ./crypto_keeper
 
-    - name: Zip CryptoKeeper folder
-      run: Compress-Archive -Path CryptoKeeper -DestinationPath CryptoKeeper.zip
+    - uses: actions/upload-artifact@v2
+      with:
+        name: build
+        path: crypto_keeper/build
+
+  build-macos:
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.11
+
+    - name: Install dependencies
+      run: pip install -r requirements.txt
+
+    - name: Install PyInstaller
+      run: pip install pyinstaller
+
+    - name: Build the macOS application
+      run: pyinstaller --onefile --windowed --icon="view/icon.icns" --add-data "view/icon.icns:view" main.py
       working-directory: ./crypto_keeper
+
+    - name: Move macOS app to temporary directory
+      run: |
+        mkdir build
+        mv dist/main.app build/CryptoKeeper-macOS.app
+      working-directory: ./crypto_keeper
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: build
+        path: crypto_keeper/build
+
+  release:
+    needs: [build-windows, build-macos]
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/download-artifact@v2
+      with:
+        name: build
+        path: build
+
+    - name: Zip build folder
+      run: zip -r CryptoKeeper.zip build
 
     - name: Create Release
       id: create_release
@@ -54,6 +100,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./crypto_keeper/CryptoKeeper.zip
-        asset_name: CryptoKeeper-Windows-${{ github.ref }}.zip
+        asset_path: ./CryptoKeeper.zip
+        asset_name: CryptoKeeper-${{ github.ref }}.zip
         asset_content_type: application/zip
