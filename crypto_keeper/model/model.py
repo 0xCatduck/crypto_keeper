@@ -5,23 +5,36 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives import padding
 import json
 import base64
+import platform
+
+def get_app_dir():
+    base_path = os.path.dirname(sys.executable if getattr(sys, 'frozen', False) else os.path.abspath(__file__))
+
+    # 檢查是否在 macOS 的 .app 包内
+    if base_path.endswith('MacOS') and platform.system() == 'Darwin':
+        # 向上三级是.app外
+        return os.path.abspath(os.path.join(base_path, os.pardir, os.pardir, os.pardir))
+    elif os.path.exists(os.path.join(base_path, 'exe_marker.txt')):
+        # 是 Windows 或 Linux 下的 .exe 或其他封裝形式
+        return base_path
+    elif os.path.exists(os.path.join(base_path, 'app_marker.txt')):
+        # 是 .app 封装，但不在 MacOS 目錄下
+        return os.path.abspath(os.path.join(base_path, os.pardir, os.pardir, os.pardir))
+
+    # 判斷是否直接運行 Python 檔案
+    if not getattr(sys, 'frozen', False):
+        # 假設 model.py 位於 main.py 的子目錄，則回到上級目錄
+        return os.path.abspath(os.path.join(base_path, os.pardir))
+    
+    return base_path  # 默認返回當前路徑
 
 class LegacyModel:
     def __init__(self, key_file='key.txt', data_file='legacy_data.json'):
-        # 確定應用程序的可執行文件所在的目錄
-        if getattr(sys, 'frozen', False):
-            # 如果應用程序被打包，使用 sys.executable 獲得路徑
-            app_dir = os.path.dirname(sys.executable)
-        else:
-            # 如果應用程序未被打包，使用當前腳本的目錄
-            app_dir = os.path.dirname(os.path.abspath(__file__))
-
-        # 創建一個名為 'data' 的子資料夾
-        data_dir = os.path.join(app_dir, 'data')
+        app_dir = get_app_dir()
+        data_dir = os.path.join(app_dir, 'CryptoKeeperData')
         if not os.path.exists(data_dir):
-            os.makedirs(data_dir)  # 如果 'data' 資料夾不存在，則創建它
+            os.makedirs(data_dir)
 
-        # 組合 key 和 data 文件的完整路徑
         self.key_file = os.path.join(data_dir, key_file)
         self.data_file = os.path.join(data_dir, data_file)
         
