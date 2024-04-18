@@ -34,10 +34,13 @@ jobs:
         move dist\main.exe CryptoKeeper\CryptoKeeper.exe
       working-directory: ./crypto_keeper
 
+    - name: Compress Windows files
+      run: Compress-Archive -Path crypto_keeper/CryptoKeeper -DestinationPath CryptoKeeper-Windows-${{ github.ref_name }}.zip
+
     - uses: actions/upload-artifact@v2
       with:
-        name: CryptoKeeper-Windows
-        path: crypto_keeper/CryptoKeeper
+        name: CryptoKeeper-Windows-${{ github.ref_name }}.zip
+        path: CryptoKeeper-Windows-${{ github.ref_name }}.zip
 
   build-macos:
     runs-on: macos-latest
@@ -57,21 +60,23 @@ jobs:
       run: pip install pyinstaller
 
     - name: Build the macOS application
-      run: |
-        python -m PyInstaller --onefile --windowed --icon="view/icon.icns" --add-data "view/icon.icns:view" --target-arch universal2 main.py
+      run: pyinstaller --onefile --windowed --icon="view/icon.icns" --add-data "view/icon.icns:view" main.py
       working-directory: ./crypto_keeper
 
     - name: Create CryptoKeeper folder and move app
       run: |
-        rm -rf CryptoKeeper-macOS
-        mkdir CryptoKeeper-macOS
-        mv dist/main.app CryptoKeeper-macOS/CryptoKeeper.app
+        rm -rf CryptoKeeper
+        mkdir CryptoKeeper
+        mv dist/main.app CryptoKeeper/CryptoKeeper.app
       working-directory: ./crypto_keeper
+
+    - name: Compress macOS files
+      run: zip -r CryptoKeeper-macOS-${{ github.ref_name }}.zip crypto_keeper/CryptoKeeper
 
     - uses: actions/upload-artifact@v2
       with:
-        name: CryptoKeeper-macOS
-        path: crypto_keeper/CryptoKeeper-macOS
+        name: CryptoKeeper-macOS-${{ github.ref_name }}.zip
+        path: CryptoKeeper-macOS-${{ github.ref_name }}.zip
 
   release:
     needs: [build-windows, build-macos]
@@ -80,18 +85,11 @@ jobs:
     steps:
     - uses: actions/download-artifact@v2
       with:
-        name: CryptoKeeper-Windows
-        path: CryptoKeeper-Windows
+        name: CryptoKeeper-Windows-${{ github.ref_name }}.zip
 
     - uses: actions/download-artifact@v2
       with:
-        name: CryptoKeeper-macOS
-        path: CryptoKeeper-macOS
-
-    - name: Compress files
-      run: |
-        zip -r CryptoKeeper-Windows.zip CryptoKeeper-Windows
-        zip -r CryptoKeeper-macOS.zip CryptoKeeper-macOS
+        name: CryptoKeeper-macOS-${{ github.ref_name }}.zip
 
     - name: Create Release
       id: create_release
@@ -100,7 +98,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
+        release_name: Release ${{ github.ref_name }}
         draft: false
         prerelease: false
 
@@ -110,8 +108,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./CryptoKeeper-Windows.zip
-        asset_name: CryptoKeeper-${{ github.ref }}-Windows.zip
+        asset_path: ./CryptoKeeper-Windows-${{ github.ref_name }}.zip
+        asset_name: CryptoKeeper-Windows-${{ github.ref_name }}.zip
         asset_content_type: application/zip
 
     - name: Upload macOS Release Asset
@@ -120,6 +118,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./CryptoKeeper-macOS.zip
-        asset_name: CryptoKeeper-${{ github.ref }}-macOS.zip
+        asset_path: ./CryptoKeeper-macOS-${{ github.ref_name }}.zip
+        asset_name: CryptoKeeper-macOS-${{ github.ref_name }}.zip
         asset_content_type: application/zip
