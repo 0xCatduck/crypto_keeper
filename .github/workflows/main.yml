@@ -58,7 +58,7 @@ jobs:
 
     - name: Build the macOS Intel application
       run: |
-        arch -x86_64 bash -c "pyinstaller --onefile --windowed --icon='view/icon.icns' --add-data 'view/icon.icns:view' main.py"
+        python -m PyInstaller --onefile --windowed --icon="view/icon.icns" --add-data "view/icon.icns:view" --target-arch x86_64 main.py
       working-directory: ./crypto_keeper
 
     - name: Create CryptoKeeper folder and move app
@@ -92,7 +92,7 @@ jobs:
 
     - name: Build the macOS Silicon application
       run: |
-        arch -arm64 bash -c "pyinstaller --onefile --windowed --icon='view/icon.icns' --add-data 'view/icon.icns:view' main.py"
+        python -m PyInstaller --onefile --windowed --icon="view/icon.icns" --add-data "view/icon.icns:view" --target-arch arm64 main.py
       working-directory: ./crypto_keeper
 
     - name: Create CryptoKeeper folder and move app
