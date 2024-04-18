@@ -4,3 +4,5 @@ crypto_keeper/legacy_data.json
 crypto_keeper/build
 crypto_keeper/main.spec
 crypto_keeper/dist
+crypto_keeper/.DS_Store
+crypto_keeper/CryptoKeeperData
