@@ -24,7 +24,7 @@ jobs:
       run: pip install pyinstaller
 
     - name: Build the application
-      run: pyinstaller --onefile --windowed --icon=view/icon.ico --add-data "view/icon.png;." main.py
+      run: pyinstaller --onefile --windowed --icon="view/icon.ico" --add-data "view/icon.png;view" main.py
       working-directory: ./crypto_keeper
 
     - name: Create CryptoKeeper folder and move exe
