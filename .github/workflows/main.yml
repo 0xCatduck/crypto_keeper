@@ -29,6 +29,7 @@ jobs:
 
     - name: Move Windows exe to temporary directory
       run: |
+        if (Test-Path build) { Remove-Item -Recurse -Force build }
         mkdir build
         move dist\main.exe build\CryptoKeeper-Windows.exe
       working-directory: ./crypto_keeper
@@ -61,6 +62,7 @@ jobs:
 
     - name: Move macOS app to temporary directory
       run: |
+        rm -rf build
         mkdir build
         mv dist/main.app build/CryptoKeeper-macOS.app
       working-directory: ./crypto_keeper
