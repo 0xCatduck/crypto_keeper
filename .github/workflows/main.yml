@@ -39,7 +39,7 @@ jobs:
         name: CryptoKeeper-Windows
         path: crypto_keeper/CryptoKeeper
 
-  build-macos-intel:
+  build-macos:
     runs-on: macos-latest
 
     steps:
@@ -56,59 +56,25 @@ jobs:
     - name: Install PyInstaller
       run: pip install pyinstaller
 
-    - name: Build the macOS Intel application
+    - name: Build the macOS application
       run: |
-        python -m PyInstaller --onefile --windowed --icon="view/icon.icns" --add-data "view/icon.icns:view" --target-arch x86_64 main.py
+        python -m PyInstaller --onefile --windowed --icon="view/icon.icns" --add-data "view/icon.icns:view" --target-arch universal2 main.py
       working-directory: ./crypto_keeper
 
     - name: Create CryptoKeeper folder and move app
       run: |
-        rm -rf CryptoKeeper-Intel
-        mkdir CryptoKeeper-Intel
-        mv dist/main.app CryptoKeeper-Intel/CryptoKeeper.app
+        rm -rf CryptoKeeper-macOS
+        mkdir CryptoKeeper-macOS
+        mv dist/main.app CryptoKeeper-macOS/CryptoKeeper.app
       working-directory: ./crypto_keeper
 
     - uses: actions/upload-artifact@v2
       with:
-        name: CryptoKeeper-macOS-Intel
-        path: crypto_keeper/CryptoKeeper-Intel
-
-  build-macos-silicon:
-    runs-on: macos-latest
-
-    steps:
-    - uses: actions/checkout@v2
-
-    - name: Set up Python 3.11
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.11
-
-    - name: Install dependencies
-      run: pip install -r requirements.txt
-
-    - name: Install PyInstaller
-      run: pip install pyinstaller
-
-    - name: Build the macOS Silicon application
-      run: |
-        python -m PyInstaller --onefile --windowed --icon="view/icon.icns" --add-data "view/icon.icns:view" --target-arch arm64 main.py
-      working-directory: ./crypto_keeper
-
-    - name: Create CryptoKeeper folder and move app
-      run: |
-        rm -rf CryptoKeeper-Silicon
-        mkdir CryptoKeeper-Silicon
-        mv dist/main.app CryptoKeeper-Silicon/CryptoKeeper.app
-      working-directory: ./crypto_keeper
-
-    - uses: actions/upload-artifact@v2
-      with:
-        name: CryptoKeeper-macOS-Silicon
-        path: crypto_keeper/CryptoKeeper-Silicon
+        name: CryptoKeeper-macOS
+        path: crypto_keeper/CryptoKeeper-macOS
 
   release:
-    needs: [build-windows, build-macos-intel, build-macos-silicon]
+    needs: [build-windows, build-macos]
     runs-on: ubuntu-latest
 
     steps:
@@ -119,19 +85,13 @@ jobs:
 
     - uses: actions/download-artifact@v2
       with:
-        name: CryptoKeeper-macOS-Intel
-        path: CryptoKeeper-macOS-Intel
-
-    - uses: actions/download-artifact@v2
-      with:
-        name: CryptoKeeper-macOS-Silicon
-        path: CryptoKeeper-macOS-Silicon
+        name: CryptoKeeper-macOS
+        path: CryptoKeeper-macOS
 
     - name: Compress files
       run: |
         zip -r CryptoKeeper-Windows.zip CryptoKeeper-Windows
-        zip -r CryptoKeeper-macOS-Intel.zip CryptoKeeper-macOS-Intel
-        zip -r CryptoKeeper-macOS-Silicon.zip CryptoKeeper-macOS-Silicon
+        zip -r CryptoKeeper-macOS.zip CryptoKeeper-macOS
 
     - name: Create Release
       id: create_release
@@ -154,22 +114,12 @@ jobs:
         asset_name: CryptoKeeper-${{ github.ref }}-Windows.zip
         asset_content_type: application/zip
 
-    - name: Upload macOS Intel Release Asset
+    - name: Upload macOS Release Asset
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./CryptoKeeper-macOS-Intel.zip
-        asset_name: CryptoKeeper-${{ github.ref }}-macOS-Intel.zip
-        asset_content_type: application/zip
-
-    - name: Upload macOS Silicon Release Asset
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./CryptoKeeper-macOS-Silicon.zip
-        asset_name: CryptoKeeper-${{ github.ref }}-macOS-Silicon.zip
+        asset_path: ./CryptoKeeper-macOS.zip
+        asset_name: CryptoKeeper-${{ github.ref }}-macOS.zip
         asset_content_type: application/zip
