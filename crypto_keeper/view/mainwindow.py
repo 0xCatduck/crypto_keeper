@@ -9,12 +9,14 @@ from PySide6.QtCore import Qt
 import os
 import sys
 
-if getattr(sys, 'frozen', False):
-    # The application is frozen
-    bundle_dir = sys._MEIPASS
-else:
-    # The application is not frozen
-    bundle_dir = os.path.dirname(os.path.abspath(__file__))
+def get_base_dir():
+    if getattr(sys, 'frozen', False):
+        # The application is frozen
+        return sys._MEIPASS
+    else:
+        # The application is not frozen
+        # 返回 view 資料夾的位置
+        return os.path.dirname(os.path.abspath(__file__))
 
 class Mainwindow(QWidget):
     def __init__(self, model):
@@ -33,7 +35,8 @@ class Mainwindow(QWidget):
         self.setSizePolicy(size_policy)
 
         # Add icon
-        icon_path = os.path.join(bundle_dir, 'view', 'icon.png')
+        base_dir = get_base_dir()
+        icon_path = os.path.join(base_dir, 'icon.png')
         self.setWindowIcon(QIcon(icon_path))
 
         # Category combo box

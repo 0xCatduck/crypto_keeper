@@ -1,3 +1,9 @@
+# Application name: Crypto Keeper
+# Application version: 0.0.4
+# Description: A simple password manager for cryptocurrency users
+# Author: 0xCatduck
+# Download URL: https://github.com/0xCatduck/crypto_keeper
+
 # crypto_keeper/main.py
 import sys
 import os
