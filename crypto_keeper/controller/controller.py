@@ -1,5 +1,5 @@
 # crypto_keeper/controller/controller.py
-from PySide6.QtWidgets import QMessageBox, QLineEdit
+from PySide6.QtWidgets import QMessageBox
 
 class Controller:
     def __init__(self, model, view):
