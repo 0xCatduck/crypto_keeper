@@ -12,7 +12,7 @@ import sys
 def get_base_dir():
     if getattr(sys, 'frozen', False):
         # The application is frozen
-        return sys._MEIPASS
+        return os.path.join(sys._MEIPASS, 'view')
     else:
         # The application is not frozen
         # 返回 view 資料夾的位置
