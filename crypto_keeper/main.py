@@ -1,8 +1,12 @@
-# Application name: Crypto Keeper
-# Application version: 0.0.4
-# Description: A simple password manager for cryptocurrency users
+# Application Name: Crypto Keeper
+# Version: 1.0.0
+# Encoding: UTF-8
+# Release Date: 2024-04-19
+# Description: Crypto Keeper is a simple password manager designed specifically for cryptocurrency users. 
+#              It provides secure and easy management of your crypto-related credentials.
 # Author: 0xCatduck
 # Download URL: https://github.com/0xCatduck/crypto_keeper
+
 
 # crypto_keeper/main.py
 import sys
