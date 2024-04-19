@@ -106,10 +106,13 @@ class LegacyModel:
         self.save_data()
 
     def decrypt_and_retrieve(self, category, identifier):
-        if category in self.data:
-            encrypted_data = self.data[category].get(identifier)
-            if encrypted_data:
+        encrypted_data = self.data[category].get(identifier)
+        if encrypted_data:
+            try:
                 return self.decrypt_data(encrypted_data)
+            except ValueError as e:
+                print(f"Decryption error: {e}")
+                return None
         return None
 
     def delete_data(self, category, identifier):
