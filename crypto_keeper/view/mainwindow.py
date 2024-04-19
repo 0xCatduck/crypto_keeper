@@ -1,10 +1,11 @@
 # crypto_keeper/view/mainwindow.py
 
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QComboBox, QLineEdit, QPushButton, QListWidget, QLabel, QApplication, QListWidget, QSizePolicy
+    QWidget, QVBoxLayout, QHBoxLayout, QComboBox, QLineEdit, QPushButton, QListWidget, QLabel, QApplication, QListWidget, QSizePolicy, QScrollArea
 )
 from PySide6.QtGui import QFont
 from PySide6.QtGui import QIcon
+from PySide6.QtCore import Qt
 import os
 import sys
 
@@ -43,6 +44,11 @@ class Mainwindow(QWidget):
         category_layout.addWidget(category_label)
         layout.addLayout(category_layout)
 
+        # Set font size for the main window and all children widgets
+        base_font = QFont()
+        base_font.setPointSize(12)  # 設置基礎字體大小
+        self.setFont(base_font)
+
         # Identifier input
         identifier_layout = QHBoxLayout()
         identifier_label = QLabel('Name:')
@@ -55,10 +61,20 @@ class Mainwindow(QWidget):
         # Data inputs
         self.data_input_widget = QWidget()
         self.data_input_layout = QVBoxLayout(self.data_input_widget)
-        layout.addWidget(self.data_input_widget)
+        self.data_input_layout.setAlignment(Qt.AlignTop)  # 確保內容對齊頂部
 
-        # Add stretch before data inputs to push them to the top
-        layout.addStretch(1)
+        # 將 data_input_widget 封裝在 QScrollArea 中
+        self.scroll_area = QScrollArea()
+        self.scroll_area.setWidgetResizable(True)
+        self.scroll_area.setWidget(self.data_input_widget)
+        layout.addWidget(self.scroll_area)
+
+        # Set size policy for data_input_widget to allow minimum size
+        self.data_input_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
+
+        self.scroll_area.setStyleSheet("QScrollArea { background-color: #333; }"
+                                       "QScrollBar:vertical { background: #333; }")
+
 
         # Buttons
         button_layout = QHBoxLayout()
@@ -84,6 +100,7 @@ class Mainwindow(QWidget):
         # Data list
         self.data_list = QListWidget()
         self.data_list.currentItemChanged.connect(self.enable_delete_button)
+        self.data_list.setFixedHeight(150)
         layout.addWidget(self.data_list)
 
         # Set size policy for all widgets
@@ -91,18 +108,21 @@ class Mainwindow(QWidget):
         self.data_input_widget.setSizePolicy(size_policy)
         self.data_list.setSizePolicy(size_policy)
 
-        # Set font size for all widgets
-        font = QFont()
-        font.setPointSize(12)  # 設置初始字體大小
-        self.setFont(font)
-
         # update data list when opening the window
         self.category_combo.currentIndexChanged.connect(self.update_data_inputs)
         self.update_data_inputs(0) 
         self.update_data_list(0)
+        self.set_scroll_area_font_size(0)
 
         # double click to copy data
         self.connect_data_input_events()
+
+        # Set font size for newly added widgets inside the scroll area
+        self.category_combo.currentIndexChanged.connect(self.set_scroll_area_font_size)
+
+    def set_scroll_area_font_size(self, index):
+        for widget in self.data_input_widget.findChildren(QWidget):
+            widget.setFont(self.scroll_area.font())
 
     def update_data_list(self, index):
         category = self.category_combo.itemText(index)
@@ -111,8 +131,13 @@ class Mainwindow(QWidget):
             self.data_list.addItems(self.model.data[category].keys())
 
     def update_data_inputs(self, index):
+        # 移除佈局中的所有 widgets
         for i in reversed(range(self.data_input_layout.count())):
-            self.data_input_layout.itemAt(i).widget().setParent(None)
+            layout_item = self.data_input_layout.itemAt(i)
+            widget = layout_item.widget()
+            if widget is not None:
+                widget.setParent(None)
+                widget.deleteLater()  # 確保釋放資源
 
         if index == 0:  # Wallet
             self.add_wallet_inputs()
@@ -225,7 +250,7 @@ class Mainwindow(QWidget):
         custom_field_widget = QWidget()
         custom_field_layout = QHBoxLayout(custom_field_widget)
         
-        if name:
+        if isinstance(name, str):
             name_widget = QLabel(name)
         else:
             name_widget = QLineEdit()
@@ -247,6 +272,11 @@ class Mainwindow(QWidget):
         self.data_input_layout.addWidget(custom_field_widget)
         self.custom_fields.append((custom_field_widget, name_widget, value_input))  # Include the widget itself
         self.update_save_button_state()
+        
+        # Set font size for the new custom field widget
+        scroll_area_font = self.scroll_area.font()
+        name_widget.setFont(scroll_area_font)
+        value_input.setFont(scroll_area_font)
 
     def setup_double_click_to_copy(self, input_field):
         def on_double_click(event):
