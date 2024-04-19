@@ -42,42 +42,61 @@ class LegacyModel:
 
     def load_key_and_data(self):
         if os.path.exists(self.key_file):
-            with open(self.key_file, 'r') as f:  # 改為以讀取文本模式開啟
-                self.key = bytes.fromhex(f.read())  # 將十六進位字符串轉換回二進制
+            with open(self.key_file, 'r') as f:
+                self.key = bytes.fromhex(f.read())
         else:
             self.key = os.urandom(32)
-            with open(self.key_file, 'w') as f:  # 改為以寫入文本模式開啟
-                f.write(self.key.hex())  # 寫入十六進位字符串
+            with open(self.key_file, 'w') as f:
+                f.write(self.key.hex())
 
         self.data = {}
         if os.path.exists(self.data_file):
             self.load_data()
-        else:
-            self.data['iv'] = os.urandom(16).hex()  # 初始化 IV 並以十六進位字符串保存
-            self.save_data()
 
-        self.cipher = Cipher(algorithms.AES(self.key), modes.CBC(bytes.fromhex(self.data['iv'])))
+    def load_data(self):
+        try:
+            with open(self.data_file, 'r') as f:
+                self.data = json.load(f)
+        except (IOError, json.JSONDecodeError) as e:
+            print(f"Error loading from file: {e}")
+
 
 
     def encrypt_data(self, plaintext):
-        encryptor = self.cipher.encryptor()
+        # Generate a new random IV
+        iv = os.urandom(16)
+        cipher = Cipher(algorithms.AES(self.key), modes.CBC(iv))
+        encryptor = cipher.encryptor()
+        
+        # Prepare the plaintext for encryption
         padder = padding.PKCS7(algorithms.AES.block_size).padder()
         padded_data = padder.update(plaintext.encode('utf-8')) + padder.finalize()
+        
+        # Encrypt the data
         encrypted_data = encryptor.update(padded_data) + encryptor.finalize()
-        return base64.b64encode(encrypted_data).decode('utf-8')
+        
+        # Return the IV along with the encrypted data, here encoded in base64
+        return base64.b64encode(iv + encrypted_data).decode('utf-8')
 
     def decrypt_data(self, encrypted_data):
-        encrypted_data = base64.b64decode(encrypted_data.encode('utf-8'))
-        decryptor = self.cipher.decryptor()
-        unpadder = padding.PKCS7(algorithms.AES.block_size).unpadder()
-
+        # Decode the data from base64
+        encrypted_data_with_iv = base64.b64decode(encrypted_data.encode('utf-8'))
+        
+        # Extract the IV and encrypted data
+        iv = encrypted_data_with_iv[:16]
+        encrypted_data = encrypted_data_with_iv[16:]
+        
+        # Create a Cipher object using the extracted IV
+        cipher = Cipher(algorithms.AES(self.key), modes.CBC(iv))
+        decryptor = cipher.decryptor()
+        
+        # Decrypt and depad the data
         decrypted_data = decryptor.update(encrypted_data) + decryptor.finalize()
-        try:
-            unpadded_data = unpadder.update(decrypted_data) + unpadder.finalize()
-            return unpadded_data.decode('utf-8')
-        except ValueError:
-            print("Padding verification failed.")
-            return None
+        unpadder = padding.PKCS7(algorithms.AES.block_size).unpadder()
+        unpadded_data = unpadder.update(decrypted_data) + unpadder.finalize()
+        
+        return unpadded_data.decode('utf-8')
+
 
     def encrypt_and_store(self, category, identifier, plaintext):
         encrypted_data = self.encrypt_data(plaintext)
