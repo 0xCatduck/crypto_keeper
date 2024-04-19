@@ -9,6 +9,12 @@
 - **Data Export**: Allows users to export encrypted data as `legacy_data.json` and securely access it through `key.txt`.
 - **Cross-Platform Support**: Compatible with multiple operating systems.
 
+## Tutorial Video
+
+Click on the image below to watch the tutorial video:
+
+[![Watch the video](https://github.com/0xCatduck/crypto_keeper/blob/main/crypto_keeper/view/icon.png)](https://youtu.be/yLe_tbXtwZs)
+
 ## Installation
 
 ```bash
